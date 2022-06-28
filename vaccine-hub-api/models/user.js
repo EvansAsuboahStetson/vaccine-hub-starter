@@ -1,10 +1,10 @@
 const { UnauthorizedError } = require("../utils/errors");
 
-class user {
+class User {
     static async login(credentials) {
       
   }
-    static async ServiceWorkerRegistration(credentials) {
+    static async register(credentials) {
       
   }
 }
