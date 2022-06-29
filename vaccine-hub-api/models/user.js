@@ -20,6 +20,7 @@ class User {
 
     requiredFields.forEach((field) => {
       if (!credentials.hasOwnProperty(field)) {
+        console.log("Login-","error")
         throw new BadRequestError(`Missing ${field} in request body`);
       }
     });
@@ -34,21 +35,18 @@ class User {
     throw new UnauthorizedError("Invalid email/password-combo");
   }
   static async register(credentials) {
-    const requiredFields = [
-      "email",
-      "password",
-      "first_name",
-      "last_name",
-      "location",
-    ];
+    const requiredFields = [ "email","password","firstName","lastName","location"];
 
     requiredFields.forEach((field) => {
+      
       if (!credentials.hasOwnProperty(field)) {
+        console.log("Register-","error")
         throw new BadRequestError(`Missing ${field} in request body`);
       }
     });
 
     if (credentials.email.indexOf("@") <= 0) {
+      console.log("Invalid-","error")
       throw new BadRequestError("Invalid email");
     }
     const existingUser = await User.fetchUserByEmail(credentials.email);
@@ -66,16 +64,17 @@ class User {
 
     const result = await db.query(
       `
-      INSERT INTO users(email, password, first_name, last_name, location) 
-      VALUES($1,$2,$3,$4,$5)
+      INSERT INTO users(email, password, first_name, last_name, location,date) 
+      VALUES($1,$2,$3,$4,$5,$6)
       RETURNING id,email,password,first_name,last_name,location,date;
       `,
       [
         lowerCaseEmail,
         hashedPassword,
-        credentials.first_name,
-        credentials.last_name,
+        credentials.firstName,
+        credentials.lastName,
         credentials.location,
+        credentials.date
       ]
     );
 
