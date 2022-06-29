@@ -5,7 +5,34 @@ const db = require("../db");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 
 class User {
-  static async login(credentials) {}
+  static async makePublicUser(user) {
+    return {
+      id: user.id,
+      email: user.email,
+      location: user.location,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      date: user.date
+    };
+  }
+  static async login(credentials) {
+    const requiredFields = ["email", "password"];
+
+    requiredFields.forEach((field) => {
+      if (!credentials.hasOwnProperty(field)) {
+        throw new BadRequestError(`Missing ${field} in request body`);
+      }
+    });
+    const user = await User.fetchUserByEmail(credentials.email);
+    if (user) {
+      const isValid = await bcrypt.compare(credentials.password, user.password);
+
+      if (isValid) {
+        return User.makePublicUser(user);
+      }
+    }
+    throw new UnauthorizedError("Invalid email/password-combo");
+  }
   static async register(credentials) {
     const requiredFields = [
       "email",
@@ -24,9 +51,10 @@ class User {
     if (credentials.email.indexOf("@") <= 0) {
       throw new BadRequestError("Invalid email");
     }
-
     const existingUser = await User.fetchUserByEmail(credentials.email);
+    console.log(existingUser)
     if (existingUser) {
+      console.log("existing user")
       throw new BadRequestError(`Duplicate email: ${credentials.email}`);
     }
     const hashedPassword = await bcrypt.hash(
@@ -52,7 +80,7 @@ class User {
     );
 
     const user = result.rows[0];
-    return user;
+    return User.makePublicUser(user);
   }
   static async fetchUserByEmail(email) {
     if (!email) {
